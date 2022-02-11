@@ -1,6 +1,7 @@
 import tkinter as tk
 from PendulumClass import *
 
+
 class GUI:
     def __init__(self, w=1000, h=700):
         self.w = w

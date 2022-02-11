@@ -1,6 +1,7 @@
 import math as m
 global g
 g = 9.81
+global e
 
 class Mass:
     def __init__(self, m, x, y, a, anchor, d):
@@ -26,14 +27,14 @@ class Mass:
         torque = (self.d * m.sin(self.a)) * (fy + self.m * g) + (self.d * m.cos(self.a) * fx)
         alpha = torque / (self.m * (self.d**2))  # angular acceleration
         self.a += self.o * dt  # New angle
-        self.o += (alpha * dt/ 1.1)  # New angular velocity
+        self.o += (alpha * dt/ 2)  # New angular velocity
         self.pos = [self.anchor.pos[0] + self.d * m.sin(self.a), self.anchor.pos[1] + self.d * m.cos(self.a)]
 
     def get_f(self):
         return self.m * self.d * (self.o ** 2)
 
     def resolve_f(self):
-        return self.get_f() * m.sin(self.a), -self.get_f() * m.cos(self.a)
+        return self.get_f() * m.sin(self.a), min(-self.get_f() * m.cos(self.a) + self.m * g, 0)
 
     def resolve_v(self):
         v = self.o * self.d
@@ -41,16 +42,17 @@ class Mass:
 
 
 class DPendulum:
-    def __init__(self, l1=1, m1=1, a1=m.radians(90), l2=1, m2=1, a2=m.radians(180)):
-        self.l1 = l1
-        self.m1 = m1
-        self.a1 = a1
-        self.l2 = l2
-        self.m2 = m2
-        self.a2 = a2
-        self.mass1 = Mass(self.m1, m.sin(self.a1) * self.l1, m.cos(self.a1) * self.l1, self.a1, Mass(0, 0, 0, 0, None, 0), self.l1)
-        self.mass2 = Mass(self.m2, self.mass1.pos[0] + (m.sin(self.a2) * self.l2), self.mass1.pos[1] + (m.cos(self.a2) * self.l2), self.a2, self.mass1,
-                     self.l2)
+    def __init__(self, l1=0.5, m1=1, a1=m.radians(90), l2=1, m2=1, a2=m.radians(180)):
+        # self.l1 = l1
+        # self.m1 = m1
+        # self.a1 = a1
+        # self.l2 = l2
+        # self.m2 = m2
+        # self.a2 = a2
+        self.mass1 = Mass(m1, m.sin(a1) * l1, m.cos(a1) * l1, a1, Mass(0, 0, 0, 0, None, 0), l1)
+        self.mass2 = Mass(m2, self.mass1.pos[0] + (m.sin(a2) * l2), self.mass1.pos[1] + (m.cos(a2) * l2), a2, self.mass1,
+                     l2)
+        e = (m1 * (self.mass1.pos[1] + l1) + m2 * (self.mass2.pos[1] + l2)) * g
 
     def set_angle(self, a1, a2):
         self.a1 = m.radians(a1)
