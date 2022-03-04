@@ -4,9 +4,8 @@ global g
 g = 9.81
 global e
 
-
 class DPendulum:
-    def __init__(self, l1=1, m1=1, a1=np.radians(135), l2=1, m2=1, a2=np.radians(135)):
+    def __init__(self, l1=1, m1=1, a1=np.radians(90), l2=1, m2=1, a2=np.radians(90)):
         self.l1 = l1
         self.m1 = m1
         self.a1 = a1
@@ -19,8 +18,9 @@ class DPendulum:
         self.v2 = [0, 0]
         self.y = []
 
-    def plot_isoda(self, maxt, dt):
+    def generate_lsoda(self, maxt, dt):
         self.y = odeint(self.derive, np.array([self.a1, 0, self.a2, 0]), np.arange(0, maxt + dt, dt))
+    def plot(self):
         f = []
         for th1, th1d, th2, th2d in self.y:
             pos1 = (self.l1 * np.sin(th1), -self.l1 * np.cos(th1))
