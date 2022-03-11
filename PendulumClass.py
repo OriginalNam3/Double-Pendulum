@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.integrate import odeint
 global g
 g = 9.81
 global e
@@ -16,10 +15,33 @@ class DPendulum:
         self.v1 = [0, 0]
         self.pos2 = [self.pos1[0] + l2 * np.sin(a2), self.pos1[1] - l2 * np.cos(a2)]
         self.v2 = [0, 0]
-        self.y = []
+        self.y = [[a1, 0, a2, 0]]
 
-    def generate_lsoda(self, maxt, dt):
-        self.y = odeint(self.derive, np.array([self.a1, 0, self.a2, 0]), np.arange(0, maxt + dt, dt))
+    def RK4(self, y, dt):
+        th1, th1d, th2, th2d = y
+        k1 = self.derive(y)
+        hdt = dt/2
+        k2 = self.derive((th1 + hdt * k1[0], th1d + hdt * k1[1], th2 + hdt * k1[2], th2d + hdt * k1[3]))
+        k3 = self.derive((th1 + hdt * k2[0], th1d + hdt * k2[1], th2 + hdt * k2[2], th2d + hdt * k2[3]))
+        k4 = self.derive((th1 + dt * k3[0], th1d + dt * k3[1], th2 + dt * k3[2], th2d + dt * k3[3]))
+        return [y[i] + dt * ((k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i])/6) for i in range(4)]
+
+    def generate_RK4(self, maxt, dt):
+        for i in range(int(maxt/dt)):
+            cy = self.y[i]
+            print(cy)
+            self.y.append(self.RK4(cy, dt))
+        # self.y = odeint(self.derive, np.array([self.a1, 0, self.a2, 0]), np.arange(0, maxt + dt, dt))
+
+    def euler(self, y, dt):
+        th1, th1d, th2, th2d = y
+        th1d, th1dd, th2d, th2dd = self.derive(y)
+        return th1 + dt * th1d, th1d + dt * th1dd, th2 + dt * th2d, th2d + dt * th2dd
+
+    def generate_euler(self, maxt, dt):
+        for i in range(int(maxt/dt)):
+            self.y.append(self.euler(self.y[i], dt))
+
     def plot(self):
         f = []
         for th1, th1d, th2, th2d in self.y:
@@ -28,64 +50,51 @@ class DPendulum:
             f.append((pos1, pos2))
         return f
 
-    def derive(self, y, t): # Get derivatives of y (an array of [theta1, theta1dot, theta2, theta2dot]
-        th1, z1, th2, z2 = y
-        th1d, th2d = z1, z2
+    def derive(self, y):  # Get derivatives of y (an array of [theta1, theta1dot, theta2, theta2dot]
+        th1, th1d, th2, th2d = y
         c, s = np.cos(th1 - th2), np.sin(th1 - th2)
 
-        z1d = (self.m2 * g * np.sin(th2) * c - self.m2 * s * (self.l1 * (z1**2) * c + self.l2 * (z2 ** 2)) - (self.m1 + self.m2) * g * np.sin(th1)) / (self.l1 * (self.m1 + self.m2 * (s ** 2)))
-        z2d = ((self.m1 + self.m2) * (self.l1 * (z1 ** 2) * s - g * np.sin(th2) + g * np.sin(th1) * c) + self.m2 * self.l2 * (z2 ** 2) * s * c)/(self.l2 * (self.m1 + self.m2 * (s ** 2)))
+        th1dd = (self.m2 * g * np.sin(th2) * c - self.m2 * s * (self.l1 * (th1d**2) * c + self.l2 * (th2d ** 2)) - (self.m1 + self.m2) * g * np.sin(th1)) / (self.l1 * (self.m1 + self.m2 * (s ** 2)))
+        th2dd = ((self.m1 + self.m2) * (self.l1 * (th1d ** 2) * s - g * np.sin(th2) + g * np.sin(th1) * c) + self.m2 * self.l2 * (th2d ** 2) * s * c)/(self.l2 * (self.m1 + self.m2 * (s ** 2)))
 
-        return th1d, z1d, th2d, z2d
+        return th1d, th1dd, th2d, th2dd
 
     def calc_e(self, y):
         th1, th1d, th2, th2d = y
-        V = -(self.m1 + self.m2) * g * self.l1 * np.cos(self.a1) - self.m2 * g * self.l2 * np.cos(self.a2)
+        V = -((self.m1 + self.m2) * g * self.l1 * np.cos(self.a1)) - (self.m2 * g * self.l2 * np.cos(self.a2))
         T = 0.5 * self.m1 * (self.l1 ** 2) * (th1d ** 2) + 0.5 * self.m2 * ((self.l2 ** 2) * (th2d ** 2) + (self.l1 ** 2) * (th1d ** 2) + 2 * self.l1 * self.l2 * th1d * th2d * np.cos(th1 - th2))
         return V + T
-    # def show(self):
-    #     print(self.mass1.pos, self.mass1.get_a(), self.mass1.get_v())
-    #     print(self.mass2.pos, self.mass2.get_a(), self.mass2.get_v())
-    #     print('\n\n')
 
-    # def get_pos(self):
-    #     return self.mass1.pos, self.mass2.pos
+class SPendulum:
+    def __init__(self, l=1, m=1, a=np.radians(90)):
+        self.l = l
+        self.m = m
+        self.a = a
+        self.y = [(a, 0)]
 
-# class Mass:
-#     def __init__(self, m, x, y, a, anchor, d):
-#         self.d = d
-#         self.m = m
-#         self.pos = [x, y]
-#         self.anchor = anchor
-#         self.a = a
-#         self.o = 0
-#
-#     def get_v(self):
-#         v = [self.o * self.d * m.sin(self.a), self.o * self.d * m.cos(self.a)]
-#         return m.sqrt(v[0] **2 + v[1] **2)
-#
-#     def get_a(self):
-#         if (self.pos[1]-self.anchor.pos[1]) == 0:
-#             return m.pi / 2
-#         return m.atan((self.pos[0] - self.anchor.pos[0]) / (self.pos[1] - self.anchor.pos[1]))
-#
-#     # def update_pos_verlet(self, ):
-#
-#     def update_pos(self, dt, fx=0, fy=0):
-#         fx += -self.anchor.resolve_v()[0]
-#         fy += -self.anchor.resolve_v()[1]
-#         torque = (self.d * m.sin(self.a)) * (fy + self.m * g) + (self.d * m.cos(self.a) * fx)
-#         alpha = torque / (self.m * (self.d**2))  # angular acceleration
-#         self.a += self.o * dt  # New angle
-#         self.o += (alpha * dt/ 2)  # New angular velocity
-#         self.pos = [self.anchor.pos[0] + self.d * m.sin(self.a), self.anchor.pos[1] + self.d * m.cos(self.a)]
-#
-#     def get_f(self):
-#         return self.m * self.d * (self.o ** 2)
-#
-#     def resolve_f(self):
-#         return self.get_f() * m.sin(self.a), min(-self.get_f() * m.cos(self.a) + self.m * g, 0)
-#
-#     def resolve_v(self):
-#         v = self.o * self.d
-#         return v * m.cos(self.a), v * m.sin(self.a)
+    def derive(self, y, dt):
+        th1, th1d = y  # Gets angle and omega
+        alpha = (-g * np.sin(th1)) / self.l  # gets alpha
+        return th1d + (alpha * dt)  # The Euler method is applied to return new velocity
+
+    def euler_solve(self, maxt, dt):
+        for i in range(int(maxt / dt)):
+            th1, th1d = self.y[i]  # Get angle and omega from last frame
+            nth1d = self.derive(self.y[i], dt)  # Gets new omega
+            self.y.append((th1 + (th1d * dt), nth1d))  # Adds new frame
+
+    def oscillator_sim(self, maxt, dt):
+        for i in range(int(maxt / dt)):
+            nth = self.a * np.cos(np.sqrt(g/self.l) * i * dt)
+            nthd = - self.a * np.sqrt(g/self.l) * np.sin(np.sqrt(g/self.l) * i * dt)
+            self.y.append((nth, nthd))
+
+    def plot(self):
+        f = []
+        for th1, th1d in self.y:
+            f.append((self.l * np.sin(th1), - self.l * np.cos(th1)))
+        return f
+
+    def calc_e(self, y):
+        th1, th1d = y
+        return self.m * g * (-np.cos(th1)) + 0.5 * self.m * ((self.l * th1d) ** 2)
