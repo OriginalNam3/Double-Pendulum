@@ -24,6 +24,7 @@ SPendulum:
 
 state = [theta, thetadot]
 
+Functions:
 derive(state): returns derivative of state
 euler_solve(maxt, dt): Generate all frames over a time period with time step of dt using the Euler method
 oscillator_sim(maxt, dt): Generate all frames over a time period with time step of dt using the model of a harmonic oscillator
