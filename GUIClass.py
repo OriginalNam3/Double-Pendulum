@@ -9,7 +9,7 @@ class GUI:
         self.sf = w//6
         self.dt = dt
         self.p = DPendulum(l1, m1, a1, l2, m2, a2)
-        self.p2 = DPendulum(l1, m1 + 0.1, a1, l2, m2, a2 + 0.01)
+        self.p2 = DPendulum(l1, m1, a1, l2, m2, a2)
         self.sp = SPendulum(l1, m1, a1)
         self.root = tk.Tk()
         self.display = tk.Canvas(self.root, width=w, height=h)
@@ -42,7 +42,7 @@ class GUI:
                                  fill='red')
 
     def dp_generate_frames(self, maxt):
-        self.p.generate_euler(maxt, self.dt)
+        self.p.generate_RK4(maxt, self.dt)
         self.f = self.p.plot()
 
     def run(self, fps):
@@ -57,10 +57,11 @@ class GUI:
         # print(self.p.calc_e(self.p.y[int(t / dt)]))
         self.display.delete('all')
         self.update(pos1, pos2)
-        self.root.after(int(1000/fps), self.start, fps, t + (1/fps))
+        if int((t + 1/fps) / self.dt) < len(self.fs) - 1:
+            self.root.after(int(1000/fps), self.start, fps, t + (1/fps))
 
     def two_generate_frames(self, maxt):
-        self.p2.generate_lsoda(maxt, self.dt)
+        self.p2.generate_euler(maxt, self.dt)
         self.f2 = self.p2.plot()
 
     def tworun(self, fps):
@@ -68,13 +69,12 @@ class GUI:
         self.root.mainloop()
 
     def twostart(self, fps, t=0):
-        pos1, pos2 = self.f[self.fi]
-        pos3, pos4 = self.f2[self.fi]
-        self.fi += int((1 / fps) / self.dt)
+        pos1, pos2 = self.f[int(t/self.dt)]
+        pos3, pos4 = self.f2[int(t/self.dt)]
         self.display.delete('all')
         self.update(pos1, pos2)
         self.update(pos3, pos4)
-        if int(t / self.dt) < len(self.f) - 1:
+        if int((t + 1/fps) / self.dt) < len(self.fs) - 1:
             self.root.after(int(1000 / fps), self.twostart, fps, t + 1 / fps)
 
     def sp_generate_frames(self, maxt):

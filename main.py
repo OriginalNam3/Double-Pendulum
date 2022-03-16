@@ -4,9 +4,10 @@ import csv
 
 # f = open('/Users/mingchauchan/Documents/Tonbridge/Physics/InvestigationDoublePendulum/Energy-TimeDoublePendulum.csv', 'w')
 # writer = csv.writer(f)
-sim = GUI(0.0001, 1, 1, np.radians(135), 1, 1, np.radians(135))
+sim = GUI(0.001, 1, 1, np.radians(135), 1, 1, np.radians(135))
 sim.dp_generate_frames(60)
-sim.run(100)
+sim.two_generate_frames(60)
+sim.tworun(100)
 # i = 0
 # n = len(sim.p.y)
 # while i < n:
