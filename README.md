@@ -4,8 +4,8 @@ Physics Investigation
 I used Object Oriented Programming.
 
 The classes are: 
-DPendulum(l_1, m_1, theta_1, l_2, m_2, theta_2), SPendulum(l, m, theta)
-Functions include: 
+DPendulum(l_1, m_1, theta_1, l_2, m_2, theta_2)
+SPendulum(l, m, theta)
 
 DPendulum: 
 
