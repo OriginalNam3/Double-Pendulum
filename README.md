@@ -31,3 +31,7 @@ Functions:
 - oscillator_sim(maxt, dt): Generate all frames over a time period with time step of dt using the model of a harmonic oscillator
 - plot(): returns list of cartesian coordinates translated from all frames generated
 - calc_e(state): returns total energy in the state
+
+
+GUI Instructions:
+Make sure to use dp_generate_frames(maxt) to generate frames before using run(fps) to run the animation.
